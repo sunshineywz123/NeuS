@@ -6,6 +6,7 @@ import numpy as np
 import cv2 as cv
 import trimesh
 import torch
+torch.cuda.empty_cache()
 import torch.nn.functional as F
 from torch.utils.tensorboard import SummaryWriter
 from shutil import copyfile
@@ -15,7 +16,7 @@ from pyhocon import ConfigFactory
 from models.dataset import Dataset
 from models.fields import RenderingNetwork, SDFNetwork, SingleVarianceNetwork, NeRF
 from models.renderer import NeuSRenderer
-
+import gc
 
 class Runner:
     def __init__(self, conf_path, mode='train', case='CASE_NAME', is_continue=False):
@@ -319,8 +320,11 @@ class Runner:
                                               background_rgb=background_rgb)
 
             out_rgb_fine.append(render_out['color_fine'].detach().cpu().numpy())
-
+            del background_rgb
+            del rays_o_batch
+            del rays_d_batch
             del render_out
+            gc.collect()
 
         img_fine = (np.concatenate(out_rgb_fine, axis=0).reshape([H, W, 3]) * 256).clip(0, 255).astype(np.uint8)
         return img_fine
@@ -350,6 +354,7 @@ class Runner:
                                                   img_idx_1,
                                                   np.sin(((i / n_frames) - 0.5) * np.pi) * 0.5 + 0.5,
                           resolution_level=4))
+            gc.collect()
         for i in range(n_frames):
             images.append(images[n_frames - i - 1])
 
@@ -397,3 +402,4 @@ if __name__ == '__main__':
         img_idx_0 = int(img_idx_0)
         img_idx_1 = int(img_idx_1)
         runner.interpolate_view(img_idx_0, img_idx_1)
+        gc.collect()

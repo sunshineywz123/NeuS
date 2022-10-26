@@ -1,5 +1,5 @@
 calib_bin=./build/calibration
-work_dir=../example/thin_rope
+work_dir=/data/Downloads/Downloads/example/thin_catbus
 n_images=32
 
 # Define the region of interest (ROI).
